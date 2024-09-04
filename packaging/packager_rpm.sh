@@ -7,14 +7,24 @@ readonly distro_root="${ROOT:-$HOME}"
 
 # rpm dependencies
 # python3
-dnf -y install python3 python3-coverage
+dnf -y install python3 python3-coverage python3-virtualenv cargo
 # python-imaging
 dnf -y install python3-pillow
 # pip dependencies (for dependencies not available as RPM)
 dnf -y install gcc libX11-devel libXtst-devel python3-devel libpng-devel python3-pip redhat-rpm-config
+# create a virtual enviroment to run python
+rm -rf docker_venv
+python3 -m venv docker_venv
+source docker_venv/bin/activate
 pip3 install --upgrade pip
+pip3 install setuptools setuptools-rust
+pip3 install --upgrade pip
+# setup tools
+pip3 install setuptools
+pip3 install setuptools-rust
 # contour, template, feature, cascade, text matching
 dnf -y install python3-numpy python3-opencv
+pip3 install numpy opencv-python
 # text matching
 dnf -y install tesseract tesseract-devel
 dnf -y install gcc-c++
@@ -22,18 +32,19 @@ pip3 install pytesseract==0.3.10 tesserocr==2.7.0
 # deep learning
 pip3 install torch==2.2.0 torchvision==0.17.0
 # screen controlling
-if (( distro_version <= 32 )); then
-    pip3 install autopy==4.0.0
-else
-    export DISABLE_AUTOPY=1
-fi
+#if [[ $DISABLE_AUTOPY == 1 ]]; then
+#  export DISABLE_AUTOPY=1
+#else
+#  pip3 install autopy
+#fi
+export DISABLE_AUTOPY=1
 # TODO: vncdotool doesn't control its Twisted which doesn't control its "incremental" dependency
 pip3 install incremental==22.10.0
 pip3 install vncdotool==0.12.0
 dnf -y install xdotool xwd ImageMagick
 # NOTE: PyAutoGUI's scrot dependencies are broken on Fedora 33- so we don't support these
-dnf -y install python3-tkinter scrot
-# dnf -y install gnome-screenshot
+dnf -y install python3-tkinter
+dnf -y install gnome-screenshot
 pip3 install pyautogui==0.9.54
 dnf -y install x11vnc
 
@@ -59,6 +70,7 @@ sleep 3  # give xvfb some time to start
 
 # unit tests
 dnf install -y python3-PyQt5
+pip3 install PyQt5
 cd /lib/python3*/site-packages/guibot/tests
 if (( distro_version <= 30 )); then
     COVERAGE="python3-coverage"
