@@ -1,8 +1,11 @@
 name: GH Actions
 
 on:
+  pull_request:
+  workflow_dispatch:
   push:
-    branches: [master, platform-updates]
+    branches:
+      - master
 
 jobs:
 
@@ -17,10 +20,10 @@ jobs:
         python-version: [3.10.8, 3.11, 3.12]
         install_variant: ["pip"]
         include:
-        - python-version: 3.12
-          install_variant: "rpm.fedora.40"
-        - python-version: 3.12
-          install_variant: "deb.ubuntu.noble"
+          - python-version: 3.12
+            install_variant: "rpm.fedora.40"
+          - python-version: 3.12
+            install_variant: "deb.ubuntu.noble"
       fail-fast: false
 
     steps:
@@ -41,7 +44,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'packaging/pip_requirements.txt'
         if: matrix.install_variant == 'pip'
-      - name: Display Python version
+      - name: Display Python
         run: python -c "import sys; print(sys.version)"
         if: matrix.install_variant == 'pip'
       - name: Install non-python dependencies using system packager
@@ -54,6 +57,8 @@ jobs:
           sudo apt-get -y install xfonts-base x11vnc
           # pyautogui
           sudo apt-get -y install scrot
+          # gnome-screenshot
+          sudo apt install gnome-screenshot
         if: matrix.install_variant == 'pip'
       - name: Install any dependencies and build the package
         run: pip --default-timeout=60 install -r packaging/pip_requirements.txt
@@ -69,12 +74,34 @@ jobs:
           sudo chmod a+rxw ~/.Xauthority
           # give xvfb some time to start
           sleep 3
+      - name: Display Pillow version
+        run: |
+          set -e
+          python -c "import PIL; print(PIL.__version__)"
+        if: matrix.install_variant == 'pip'
+      - name: Set Tesseract Version and Prefix name using find
+        run: |
+          # Use find to locate the tesseract-ocr directory version
+          TESS_VERSION=$(find /usr/share/tesseract-ocr/ -maxdepth 1 -type d -regex '.*/[0-9]+\.[0-9]+' | grep -oP '[0-9]+\.[0-9]+' | head -n 1)
+          
+          if [ -z "$TESS_VERSION" ]; then
+            echo "Tesseract version not found!" >&2
+            exit 1
+          fi
+          
+          # Export the environment variables
+          echo "TESS_VERSION=$TESS_VERSION" >> $GITHUB_ENV
+          echo "TESSDATA_PREFIX=/usr/share/tesseract-ocr/${TESS_VERSION}/tessdata/" >> $GITHUB_ENV
+        
+          echo "Tesseract version: $TESS_VERSION"
+          echo "Tesseract data prefix: $TESSDATA_PREFIX"
+        if: matrix.install_variant == 'pip'
       - name: Run current semi-isolation semi-integration tests (to be separated in the future)
         run: |
-          if [[ ${{ matrix.python-version }} == '3.10.8' ]]; then export DISABLE_AUTOPY=1; fi
-          if [[ ${{ matrix.python-version }} == '3.11' ]]; then export DISABLE_AUTOPY=1; fi
-          if [[ ${{ matrix.python-version }} == '3.12' ]]; then export DISABLE_AUTOPY=1; fi
-          if [[ ${{ matrix.install_variant }} != "pip" ]]; then cd packaging && bash packager_docker.sh;
+          if [[ "${{ matrix.python-version }}" == "3.10.8" ]]; then export DISABLE_AUTOPY=1; fi
+          if [[ "${{ matrix.python-version }}" == "3.11" ]]; then export DISABLE_AUTOPY=1; fi
+          if [[ "${{ matrix.python-version }}" == "3.12" ]]; then export DISABLE_AUTOPY=1; fi
+          if [[ "${{ matrix.install_variant }}" != "pip" ]]; then cd packaging && bash packager_docker.sh;
           else cd tests && bash coverage_analysis.sh; fi
         env:
           INSTALL_VARIANT: ${{ matrix.install_variant }}
