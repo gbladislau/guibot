@@ -7,21 +7,18 @@ readonly distro_root="${ROOT:-$HOME}"
 
 # rpm dependencies
 # python3
-dnf -y install python3 python3-coverage python3-virtualenv cargo
+dnf -y install python3 python3-coverage python3-virtualenv
 # python-imaging
 dnf -y install python3-pillow
 # pip dependencies (for dependencies not available as RPM)
 dnf -y install gcc libX11-devel libXtst-devel python3-devel libpng-devel python3-pip redhat-rpm-config
 # create a virtual enviroment to run python
-rm -rf docker_venv
-python3 -m venv docker_venv
-source docker_venv/bin/activate
+#rm -rf docker_venv
+#python3 -m venv docker_venv
+#source docker_venv/bin/activate
 pip3 install --upgrade pip
 pip3 install setuptools setuptools-rust
-pip3 install --upgrade pip
-# setup tools
-pip3 install setuptools
-pip3 install setuptools-rust
+pip3 install pillow==10.4.0
 # contour, template, feature, cascade, text matching
 dnf -y install python3-numpy python3-opencv
 pip3 install numpy opencv-python

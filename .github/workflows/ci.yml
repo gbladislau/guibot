@@ -17,10 +17,12 @@ jobs:
         python-version: [3.10.8, 3.11, 3.12]
         install_variant: ["pip"]
         include:
-        - python-version: 3.12
-          install_variant: "rpm.fedora.40"
-        - python-version: 3.12
-          install_variant: "deb.ubuntu.noble"
+          - python-version: 3.12
+            install_variant: "rpm.fedora.40"
+          - python-version: 3.12
+            install_variant: "deb.ubuntu.noble"
+#          - python-version: 3.12
+#            install_variant: "mcr.microsoft.com/windows:ltsc2019"
       fail-fast: false
 
     steps:

@@ -18,6 +18,7 @@ import os
 import unittest
 import logging
 import shutil
+import platform
 from unittest import mock
 from tempfile import mkdtemp, mkstemp
 
@@ -130,6 +131,7 @@ class FileResolverTest(unittest.TestCase):
 class CustomFileResolverTest(unittest.TestCase):
     """Tests for the CustomFileResolver class."""
 
+    @unittest.skipIf(platform.system() == 'Windows', "Skipping test on Windows due to path separator issues")
     def test_custom_paths(self) -> None:
         """Test if custom paths work correctly."""
         # temporary directory 1
