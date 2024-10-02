@@ -5,8 +5,6 @@ readonly libpath="${LIBPATH:-../guibot}"
 readonly coverage="${COVERAGE:-coverage3}"
 readonly submit="${SUBMIT:-0}"
 
-echo " ---- display python environment ---- "
-python3 -c "import sys; print(sys.prefix)"
 echo " ---- running tests with $coverage ---- "
 
 $coverage run --source="$libpath" -m unittest discover -v -s ../tests/

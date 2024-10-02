@@ -5,7 +5,6 @@ readonly distro="${DISTRO:-fedora}"
 readonly distro_version="${VERSION:-30}"
 readonly distro_root="${ROOT:-$HOME}"
 
-# rpm dependencies
 echo "------------- python3 -------------"
 dnf -y install python3 python3-coverage python3-devel
 echo "------------- python-imaging -------------"
@@ -22,9 +21,9 @@ dnf -y install gcc-c++
 pip3 install pytesseract==0.3.13 tesserocr==2.7.1
 
 echo "------------- deep learning -------------"
-# torchvision version available is broken (no module found)
 dnf -y install python3-torch python3-torch-devel
 pip3 install torchvision==0.17.0
+# TODO: python3-torchvision version available is broken (no module found)
 
 echo "------------- screen controlling -------------"
 echo "DISABLE_AUTOPY is set to: '$DISABLE_AUTOPY'"
@@ -35,19 +34,11 @@ else
   echo "Installing autopy..."
   pip3 install autopy
 fi
-
 # TODO: vncdotool doesn't control its Twisted which doesn't control its "incremental" dependency
-pip3 install incremental==22.10.0
 pip3 install vncdotool==0.12.0
 dnf -y install xdotool xwd ImageMagick
 # NOTE: PyAutoGUI's scrot dependencies are broken on Fedora 33- so we don't support these
-dnf -y install python3-tkinter
-pip3 install pyscreeze
-echo "--------- gnome-screenshot ---------"
 dnf -y install gnome-screenshot
-sudo dnf -y install which # NOTE: pyscreeze uses which to check the screenshot background
-which gnome-screenshot
-
 pip3 install pyautogui==0.9.54
 dnf -y install x11vnc
 
@@ -55,18 +46,12 @@ echo "------ rpm packaging and installing of current guibot source ------"
 dnf -y install rpm-build
 NAME=$(sed -n 's/^Name:[ \t]*//p' "$distro_root/guibot/packaging/guibot.spec")
 VERSION=$(sed -n 's/^Version:[ \t]*//p' "$distro_root/guibot/packaging/guibot.spec")
-
 cp -r "$distro_root/guibot" "$distro_root/$NAME-$VERSION"
 mkdir -p ~/rpmbuild/SOURCES
 tar czvf ~/rpmbuild/SOURCES/$NAME-$VERSION.tar.gz -C "$distro_root/" --exclude=.* --exclude=*.pyc $NAME-$VERSION
-
-echo "------------- rpmbuild -------------"
 rpmbuild -ba "$distro_root/$NAME-$VERSION/packaging/guibot.spec" --with opencv
 cp ~/rpmbuild/RPMS/x86_64/python3-$NAME-$VERSION*.rpm "$distro_root/guibot"
-
-echo "------------- install guibot -------------"
 dnf -y install "$distro_root/guibot/python3-"$NAME-$VERSION*.rpm
-
 rm -fr "$distro_root/$NAME-$VERSION"
 
 echo "------------- virtual display -------------"
@@ -77,13 +62,16 @@ touch /root/.Xauthority
 xauth add ${HOST}:99 . $(xxd -l 16 -p /dev/urandom)
 sleep 3  # give xvfb some time to start
 
-echo " -------- set TESSDATA_PREFIX -------- "
+echo " -------- set tesseract data environment variable -------- "
 export TESSDATA_PREFIX="/usr/share/tesseract/tessdata/"
 echo "Tesseract data prefix: $TESSDATA_PREFIX"
 
+echo "------------ dump for environment variables and python path ------------"
+printenv
+python3 -c "import sys; print(sys.prefix)"
+
 echo "------------- unit tests -------------"
 dnf install -y python3-PyQt5
-pip3 install PyQt5
 cd /lib/python3*/site-packages/guibot/tests
 if (( distro_version <= 30 )); then
     COVERAGE="python3-coverage"

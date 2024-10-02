@@ -18,22 +18,15 @@ SET DISABLE_VNCDOTOOL=1
 REM Main deps
 cd %DISTRO_ROOT%\
 REM Assuming a local python executable to avoid overloading the download web page
-START /WAIT python-3.12.6-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+START /WAIT python-3.9.0-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
 REM set a temporary path variable valid inside this session
-set PYTHONPATH="C:\Program Files\Python312"
+set PYTHONPATH="C:\Program Files\Python39"
 set PATH=%PYTHONPATH%;%PYTHONPATH%\Scripts;%PATH%
 REM a permanent path variable will be set by the executable once this batch exits
-
-REM The C++ executable and setuptools are needed to build some dependency
-REM Download the Visual C++ Redistributable package
-bitsadmin /transfer mydownloadjob /download /priority high https://aka.ms/vs/16/release/vc_redist.x64.exe C:\vc_redist.x64.exe
-REM Install the package silently
-START /WAIT C:\vc_redist.x64.exe /quiet InstallAllUsers=1 PrependPath=1
 
 REM GuiBot deps
 pip install --user --upgrade pip
 pip install -r %DISTRO_ROOT%\guibot\packaging\pip_requirements.txt
-pip install setuptools
 
 REM GuiBot setup
 echo Copying GuiBot files
