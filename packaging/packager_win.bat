@@ -15,7 +15,7 @@ SET DISABLE_VNCDOTOOL=1
 
 REM Main deps
 REM Assuming a local python executable to avoid overloading the download web page
-START /WAIT python-3.12.6-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+powershell -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\python-3.12.6-amd64.exe' -ArgumentList '/q' -Wait"
 REM set a temporary path variable valid inside this session
 set PYTHONPATH="C:\Program Files\Python312"
 set PATH=%PYTHONPATH%;%PYTHONPATH%\Scripts;%PATH%

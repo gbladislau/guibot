@@ -8,7 +8,6 @@ on:
       - master
 
 jobs:
-
   original-travis-ci-job:
     name: Linux ${{ matrix.install_variant }} with Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -88,4 +87,47 @@ jobs:
           files: tests/coverage.xml
           verbose: true
         if: matrix.install_variant == 'pip'
+      - run: echo "🥑 This job's status is ${{ job.status }}."
+
+  windows-job:
+    name: Windows 10 with Python ${{ matrix.python-version }}
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python-version: [ 3.12.6 ]
+
+    steps:
+      - run: echo "Job triggered by a ${{ github.event_name }} event on branch is ${{ github.ref }} in repository is ${{ github.repository }}, runner on ${{ runner.os }}"
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Python ${{ matrix.python-version  }} and Visual Studio C++ dependencies
+        run: |
+          $pythonVersion = "${{ matrix.python-version }}"
+          $pythonInstaller = "python-$pythonVersion-amd64.exe"
+          $downloadUrl = "https://www.python.org/ftp/python/$pythonVersion/$pythonInstaller"
+
+          Write-Host "Downloading Python $pythonVersion..."
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $pythonInstaller -Verbose
+          Write-Host "Download complete."
+
+          Write-Host "Downloading vc_redist"
+          mkdir C:\packages\
+          Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vc_redist.x64.exe  -OutFile C:\packages\vc_redist.x64.exe -Verbose
+          Write-Host "Download complete."
+
+      - name: Run packaging script (should install python and all the dependencies) and run tests
+        run: |
+          cd
+          D:\a\guibot\guibot\packaging\packager_win.bat
+
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v4
+#        with:
+#          files: tests/coverage.xml
+#          verbose: true
+
       - run: echo "🥑 This job's status is ${{ job.status }}."
