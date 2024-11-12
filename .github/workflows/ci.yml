@@ -89,3 +89,8 @@ jobs:
           verbose: true
         if: matrix.install_variant == 'pip'
       - run: echo "🥑 This job's status is ${{ job.status }}."
+      - name: Upload generated rpm artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: '~/guibot/python3-guibot-0.51*.rpm'
+        if: matrix.install_variant == 'rpm.fedora.40'
