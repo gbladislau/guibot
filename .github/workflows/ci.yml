@@ -92,5 +92,4 @@ jobs:
       - name: Upload generated rpm artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: '~/guibot/python3-guibot-0.51*.rpm'
-        if: matrix.install_variant == 'rpm.fedora.40'
+          path: '/guibot/guibot'

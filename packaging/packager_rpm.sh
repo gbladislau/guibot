@@ -51,7 +51,7 @@ tar czvf ~/rpmbuild/SOURCES/$NAME-$VERSION.tar.gz -C "$distro_root/" --exclude=.
 rpmbuild -ba "$distro_root/$NAME-$VERSION/packaging/guibot.spec" --with opencv
 cp ~/rpmbuild/RPMS/x86_64/python3-$NAME-$VERSION*.rpm "$distro_root/guibot"
 dnf -y install "$distro_root/guibot/python3-"$NAME-$VERSION*.rpm
-rm -fr "$distro_root/$NAME-$VERSION"
+mv "$distro_root/$NAME-$VERSION" "$distro_root/guibot"
 
 echo "------------- virtual display -------------"
 dnf install -y xorg-x11-server-Xvfb vim-common
