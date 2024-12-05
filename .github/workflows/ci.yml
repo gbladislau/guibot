@@ -17,8 +17,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.10.8, 3.11, 3.12]
-        install_variant: ["pip"]
+        python-version: [ 3.10.8, 3.11, 3.12 ]
+        install_variant: [ "pip" ]
         include:
           - python-version: 3.12
             install_variant: "rpm.fedora.40"
@@ -89,8 +89,50 @@ jobs:
           verbose: true
         if: matrix.install_variant == 'pip'
       - run: echo "🥑 This job's status is ${{ job.status }}."
-      - name: Upload generated rpm artifacts
-        uses: actions/upload-artifact@v4
+
+      # Publish release:
+      - name: Set Release Variables
+        id: set_vars
+        run: |
+          echo "name=guibot" >> $GITHUB_ENV
+          CHANGELOG_REVS=($(sed -n -e 's/^guibot[ \t]*(\([0-9]*.[0-9]*\)-[0-9]*).*/\1/p' "/home/runner/work/guibot/guibot/packaging/debian/changelog"))
+          VERSION=${CHANGELOG_REVS[0]}
+          echo "version=$VERSION" >> $GITHUB_ENV
+          
+          if [[ ${{ matrix.install_variant }} == "rpm" ]]; then
+              EXTENSION="rpm"
+          else
+              EXTENSION="deb"
+          fi
+          echo "ext=$EXTENSION" >> $GITHUB_ENV
+
+        if: matrix.install_variant != 'pip'
+
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path: '~/guibot/python3-guibot-0.51*.rpm'
-        if: matrix.install_variant == 'rpm.fedora.40'
+          tag_name: "${{ env.version }}"
+          release_name: "${{ env.name }}_${{ env.version }}"
+          draft: true
+          prerelease: false
+        if: matrix.install_variant != 'pip'
+
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "/home/runner/work/guibot/guibot/${{ env.name }}_${{ env.version }}.${{ env.ext }}"
+          asset_name: "${{ env.name }}-${{ env.version }}.*"
+          asset_content_type: application/deb
+        if: matrix.install_variant != 'pip'
+
+      - uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
+        if: matrix.install_variant != 'pip'
